@@ -1,11 +1,15 @@
 package com.undsf.mcmodmgr;
 
+import com.undsf.mcmodmgr.models.ModFileInfo;
+import com.undsf.mcmodmgr.services.ModInfoService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -15,6 +19,9 @@ import java.util.List;
 public class ModsManagerRunner implements ApplicationRunner {
     public static final String MOD_LOADER_FORGE = "forge";
     public static final String MOD_LOADER_FABRIC = "fabric";
+
+    @Autowired
+    public ModInfoService modInfoSvc;
 
     public void printHelp() {
         PrintStream ps = System.out;
@@ -60,6 +67,12 @@ public class ModsManagerRunner implements ApplicationRunner {
             case "list":
                 runList(args);
                 return;
+            case "check":
+                runCheck(args);
+                return;
+            case "help":
+            default:
+                printHelp();
         }
     }
 
@@ -141,5 +154,13 @@ public class ModsManagerRunner implements ApplicationRunner {
 
     public void runList(ApplicationArguments args) {
 
+    }
+
+    public void runCheck(ApplicationArguments args) {
+        String workDir = System.getProperty("user.dir");
+        log.info("当前工作目录：{}", workDir);
+        File modsDir = new File(workDir);
+
+        List<ModFileInfo> modInfoList = modInfoSvc.getModInfoFromDir(modsDir);
     }
 }
