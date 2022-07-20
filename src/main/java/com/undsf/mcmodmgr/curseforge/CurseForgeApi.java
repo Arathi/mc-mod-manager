@@ -6,6 +6,7 @@ import com.undsf.mcmodmgr.curseforge.enums.ModsSearchSortField;
 import com.undsf.mcmodmgr.curseforge.models.Mod;
 import com.undsf.mcmodmgr.curseforge.models.ModFile;
 import com.undsf.mcmodmgr.curseforge.models.PaginationResponse;
+import com.undsf.mcmodmgr.util.AbstractClient;
 import com.undsf.mcmodmgr.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class CurseForgeApi {
+public class CurseForgeApi extends AbstractClient {
     public static final int PAGE_SIZE = 50;
     public static final String BASE_URL = "https://api.curseforge.com";
     public static final String API_KEY_HEADER_NAME = "x-api-key";

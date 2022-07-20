@@ -1,5 +1,6 @@
 package com.undsf.mcmodmgr;
 
+import com.undsf.mcmodmgr.curseforge.models.Mod;
 import com.undsf.mcmodmgr.models.ModFileInfo;
 import com.undsf.mcmodmgr.services.ModInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -161,6 +162,9 @@ public class ModsManagerRunner implements ApplicationRunner {
         log.info("当前工作目录：{}", workDir);
         File modsDir = new File(workDir);
 
-        List<ModFileInfo> modInfoList = modInfoSvc.getModInfoFromDir(modsDir);
+        List<ModFileInfo> modFileInfos = modInfoSvc.getModInfoListFromDir(modsDir);
+        for (ModFileInfo mfi : modFileInfos) {
+            System.out.println(mfi.toTree());
+        }
     }
 }
