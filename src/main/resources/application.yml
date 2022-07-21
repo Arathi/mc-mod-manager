@@ -1,14 +1,2 @@
-spring:
-  profiles:
-    active:
-      - dev
-
-  main:
-    web-application-type: SERVLET
-
-server:
-  port: 8080
-
-mmm:
-  curse-forge:
-    api-key: ${CURSE_FORGE_API_KEY:}
+curse-forge:
+  api-key: ${CURSE_FORGE_API_KEY:}
