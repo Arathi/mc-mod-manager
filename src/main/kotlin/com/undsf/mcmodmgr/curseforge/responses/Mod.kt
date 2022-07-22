@@ -46,10 +46,10 @@ data class Mod(
         var authors: List<Author>,
 
         @JsonProperty
-        var logo: Image,
+        var logo: ModAsset,
 
         @JsonProperty
-        var screenshots: List<Image>,
+        var screenshots: List<ModAsset>,
 
         @JsonProperty
         var mainFileId: Int,
@@ -58,7 +58,7 @@ data class Mod(
         var latestFiles: List<File>,
 
         @JsonProperty
-        var latestFilesIndexes: List<Index>,
+        var latestFilesIndexes: List<FileIndex>,
 
         @JsonProperty
         var dateCreated: LocalDateTime,
@@ -91,5 +91,9 @@ data class Mod(
     @JsonAnySetter
     fun jsonAnySetter(key: String, value: Any?) {
         additionParameters[key] = value
+    }
+
+    override fun toString(): String {
+        return "$id: $name "
     }
 }

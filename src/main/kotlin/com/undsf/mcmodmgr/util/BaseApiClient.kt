@@ -1,13 +1,20 @@
 package com.undsf.mcmodmgr.util
 
+import mu.KotlinLogging
 import okhttp3.FormBody
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 
-abstract class BaseApiClient constructor(baseUrl: String?) {
+private val log = KotlinLogging.logger {}
+
+abstract open class BaseApiClient constructor(
+        httpClient: OkHttpClient,
+        baseUrl: String?) {
+    var httpClient: OkHttpClient = httpClient
     val baseUrl: String? = baseUrl
 
-    fun buildGetRequest(uri: String, params: String? = null) : Request {
+    fun buildGetRequest(uri: String, params: String? = null, headers: Map<String, String>? = null) : Request {
         val builder = Request.Builder()
 
         var url = ""
@@ -23,10 +30,19 @@ abstract class BaseApiClient constructor(baseUrl: String?) {
 
         builder.get().url(url)
 
+        if (headers != null && headers.isNotEmpty()) {
+            for (header in headers) {
+                builder.addHeader(header.key, header.value)
+            }
+        }
+
         return builder.build()
     }
 
-    fun buildPostRequest(uri: String, body: RequestBody) : Request {
+    fun buildPostRequest(
+            uri: String,
+            body: RequestBody,
+            headers: Map<String, String>? = null) : Request {
         val builder = Request.Builder()
 
         var url = ""
@@ -36,10 +52,16 @@ abstract class BaseApiClient constructor(baseUrl: String?) {
         builder.post(body)
                 .url(url)
 
+        if (headers != null && headers.isNotEmpty()) {
+            for (header in headers) {
+                builder.addHeader(header.key, header.value)
+            }
+        }
+
         return builder.build()
     }
 
-    protected fun buildFormBody(params: Map<String, String>?,
+    fun buildFormBody(params: Map<String, String>?,
                       encoded: Boolean = false) : FormBody {
         var builder = FormBody.Builder()
 
@@ -57,9 +79,7 @@ abstract class BaseApiClient constructor(baseUrl: String?) {
         return builder.build()
     }
 
-    protected fun buildQuery(params: Map<String, String>?,
-                   encoded: Boolean = false) : String {
-        val form = buildFormBody(params, encoded)
+    fun buildQuery(form: FormBody) : String {
         val query = StringBuilder()
 
         for (index in 1 .. form.size) {
@@ -72,5 +92,21 @@ abstract class BaseApiClient constructor(baseUrl: String?) {
         }
 
         return query.toString()
+    }
+
+    fun buildQuery(params: Map<String, String>?,
+                   encoded: Boolean = false) : String {
+        val form = buildFormBody(params, encoded)
+        return buildQuery(form)
+    }
+
+    fun sendRequest(req: Request) : String? {
+        val resp = httpClient.newCall(req).execute()
+        var body = resp.body
+        if (body != null) {
+            return body.string()
+        }
+        log.info { "请求报文（${req.method} ${req.url}）发送失败" }
+        return null
     }
 }

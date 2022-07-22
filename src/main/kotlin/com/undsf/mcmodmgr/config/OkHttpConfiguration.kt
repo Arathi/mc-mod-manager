@@ -36,7 +36,8 @@ class OkHttpConfiguration {
             "HTTP" -> Proxy.Type.HTTP
             "SOCK", "SOCK4", "SOCKS5" -> Proxy.Type.SOCKS
             else -> null
-        }
+        } ?: return null
+
         val addr = InetSocketAddress.createUnresolved(proxyHost, proxyPort)
         return Proxy(type, addr)
     }

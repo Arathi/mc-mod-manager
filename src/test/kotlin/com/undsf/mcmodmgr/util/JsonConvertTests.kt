@@ -2,14 +2,17 @@ package com.undsf.mcmodmgr.util
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.jayway.jsonpath.TypeRef
 import com.undsf.mcmodmgr.curseforge.responses.DataResponse
-import com.undsf.mcmodmgr.curseforge.responses.Image
+import com.undsf.mcmodmgr.curseforge.responses.ModAsset
 import com.undsf.mcmodmgr.curseforge.responses.Mod
 import com.undsf.mcmodmgr.models.ModPack
 import mu.KotlinLogging
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,6 +25,9 @@ private val log = KotlinLogging.logger {}
 class JsonConvertTests {
     @Autowired
     lateinit var mapper: ObjectMapper
+
+    @Autowired
+    lateinit var tpl: JsonTemplate
 
     @Test
     fun testStringify() {
@@ -42,7 +48,7 @@ class JsonConvertTests {
         )
         modPack.loadMods(listOf())
 
-        json = mapper.writeValueAsString(modPack)
+        json = JSON.stringify(modPack)
         log.info { "ModPack转换后的JSON为：${json}" }
     }
 
@@ -66,9 +72,12 @@ class JsonConvertTests {
   }
 }
 """
-        val obj: ModPack = mapper.readValue(json)
-        assertEquals("s224", obj.name, "转换出来的name与预期不符")
-        assertEquals(2, obj.mods.size, "获取到的mod数量与预期不符")
+        // val obj: ModPack = mapper.readValue(json)
+        val obj = JSON.parse(json, ModPack::class.java)
+
+        assertNotNull(obj, "解析出的对象不应为空")
+        assertEquals("s224", obj?.name, "转换出来的name与预期不符")
+        assertEquals(2, obj?.mods?.size, "获取到的mod数量与预期不符")
     }
 
     @Test
@@ -84,533 +93,216 @@ class JsonConvertTests {
         assertEquals(363704500, t1.executeTime?.nano)
     }
 
+    // region 大型JSON解析
     @Test
-    fun testAnyGetterSetter() {
-        var modJson = """{
+    fun testParseDataResponse() {
+        var json = """{
     "data": {
-        "id": 238222,
+        "id": 245755,
         "gameId": 432,
-        "name": "Just Enough Items (JEI)",
-        "slug": "jei",
+        "name": "Waystones",
+        "slug": "waystones",
         "links": {
-            "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/jei",
-            "wikiUrl": "",
-            "issuesUrl": "https://github.com/mezz/JustEnoughItems/issues?q=is%3Aissue",
-            "sourceUrl": "https://github.com/mezz/JustEnoughItems"
+            "websiteUrl": "https://www.curseforge.com/minecraft/mc-mods/waystones",
+            "wikiUrl": "https://blay09.net/mods/waystones",
+            "issuesUrl": "https://github.com/ModdingForBlockheads/Waystones/issues",
+            "sourceUrl": "https://github.com/ModdingForBlockheads/Waystones"
         },
-        "summary": "View Items and Recipes",
+        "summary": "Teleport back to activated waystones. For Survival, Adventure or Servers.",
         "status": 4,
-        "downloadCount": 178536045,
+        "downloadCount": 67654234,
         "isFeatured": false,
-        "primaryCategoryId": 423,
+        "primaryCategoryId": 414,
         "categories": [
             {
-                "id": 423,
+                "id": 419,
                 "gameId": 432,
-                "name": "Map and Information",
-                "slug": "map-information",
-                "url": "https://www.curseforge.com/minecraft/mc-mods/map-information",
-                "iconUrl": "https://media.forgecdn.net/avatars/6/38/635351497437388438.png",
-                "dateModified": "2014-05-08T17:42:23.74Z",
+                "name": "Magic",
+                "slug": "magic",
+                "url": "https://www.curseforge.com/minecraft/mc-mods/magic",
+                "iconUrl": "https://media.forgecdn.net/avatars/6/34/635351496247862494.png",
+                "dateModified": "2014-05-08T17:40:24.787Z",
                 "isClass": false,
                 "classId": 6,
                 "parentCategoryId": 6
             },
             {
-                "id": 421,
+                "id": 422,
                 "gameId": 432,
-                "name": "API and Library",
-                "slug": "library-api",
-                "url": "https://www.curseforge.com/minecraft/mc-mods/library-api",
-                "iconUrl": "https://media.forgecdn.net/avatars/6/36/635351496947765531.png",
-                "dateModified": "2014-05-23T03:21:44.06Z",
+                "name": "Adventure and RPG",
+                "slug": "adventure-rpg",
+                "url": "https://www.curseforge.com/minecraft/mc-mods/adventure-rpg",
+                "iconUrl": "https://media.forgecdn.net/avatars/6/37/635351497295252123.png",
+                "dateModified": "2014-05-08T17:42:09.54Z",
                 "isClass": false,
                 "classId": 6,
                 "parentCategoryId": 6
+            },
+            {
+                "id": 435,
+                "gameId": 432,
+                "name": "Server Utility",
+                "slug": "server-utility",
+                "url": "https://www.curseforge.com/minecraft/mc-mods/server-utility",
+                "iconUrl": "https://media.forgecdn.net/avatars/6/48/635351498950580836.png",
+                "dateModified": "2014-05-08T17:44:55.057Z",
+                "isClass": false,
+                "classId": 6,
+                "parentCategoryId": 6
+            },
+            {
+                "id": 414,
+                "gameId": 432,
+                "name": "Player Transport",
+                "slug": "technology-player-transport",
+                "url": "https://www.curseforge.com/minecraft/mc-mods/technology/technology-player-transport",
+                "iconUrl": "https://media.forgecdn.net/avatars/6/29/635351495383551178.png",
+                "dateModified": "2014-05-08T17:38:58.357Z",
+                "isClass": false,
+                "classId": 6,
+                "parentCategoryId": 412
             }
         ],
         "classId": 6,
         "authors": [
             {
-                "id": 32358,
-                "name": "mezz",
-                "url": "https://www.curseforge.com/members/17072262-mezz?username=mezz"
+                "id": 40678,
+                "name": "BlayTheNinth",
+                "url": "https://www.curseforge.com/members/12099681-blaytheninth?username=blaytheninth"
             }
         ],
         "logo": {
-            "id": 29069,
-            "modId": 238222,
-            "title": "635838945588716414.jpeg",
+            "id": 42418,
+            "modId": 245755,
+            "title": "636008504954894502.png",
             "description": "",
-            "thumbnailUrl": "https://media.forgecdn.net/avatars/thumbnails/29/69/256/256/635838945588716414.jpeg",
-            "url": "https://media.forgecdn.net/avatars/29/69/635838945588716414.jpeg"
+            "thumbnailUrl": "https://media.forgecdn.net/avatars/thumbnails/42/418/256/256/636008504954894502.png",
+            "url": "https://media.forgecdn.net/avatars/42/418/636008504954894502.png"
         },
         "screenshots": [
             {
-                "id": 31417,
-                "modId": 238222,
-                "title": "Recipe Completion",
+                "id": 37127,
+                "modId": 245755,
+                "title": "Optional Teleport Button",
                 "description": "",
-                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/31/417/310/172/thzzdin.png",
-                "url": "https://media.forgecdn.net/attachments/31/417/thzzdin.png"
+                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/37/127/310/172/2016-06-07_10.png",
+                "url": "https://media.forgecdn.net/attachments/37/127/2016-06-07_10.png"
             },
             {
-                "id": 31419,
-                "modId": 238222,
-                "title": "Potions",
+                "id": 37126,
+                "modId": 245755,
+                "title": "Waystone Menu",
                 "description": "",
-                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/31/419/310/172/t7f7jh6.png",
-                "url": "https://media.forgecdn.net/attachments/31/419/t7f7jh6.png"
+                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/37/126/310/172/2016-06-07_06.png",
+                "url": "https://media.forgecdn.net/attachments/37/126/2016-06-07_06.png"
             },
             {
-                "id": 31420,
-                "modId": 238222,
-                "title": "Itemlist Edit Mode",
+                "id": 37125,
+                "modId": 245755,
+                "title": "Waystones",
                 "description": "",
-                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/31/420/310/172/tgafkma.png",
-                "url": "https://media.forgecdn.net/attachments/31/420/tgafkma.png"
-            },
-            {
-                "id": 31418,
-                "modId": 238222,
-                "title": "Big Screen Support",
-                "description": "",
-                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/31/418/310/172/9lngh5f.png",
-                "url": "https://media.forgecdn.net/attachments/31/418/9lngh5f.png"
+                "thumbnailUrl": "https://media.forgecdn.net/attachments/thumbnails/37/125/310/172/screenshotwaystones.png",
+                "url": "https://media.forgecdn.net/attachments/37/125/screenshotwaystones.png"
             }
         ],
-        "mainFileId": 3847103,
+        "mainFileId": 3835119,
         "latestFiles": [
             {
-                "id": 3040523,
+                "id": 3051110,
                 "gameId": 432,
-                "modId": 238222,
+                "modId": 245755,
                 "isAvailable": true,
-                "displayName": "jei_1.12.2-4.16.1.301.jar",
-                "fileName": "jei_1.12.2-4.16.1.301.jar",
-                "releaseType": 1,
-                "fileStatus": 4,
-                "hashes": [
-                    {
-                        "value": "3045e8440ea44071d8b83c4e7b3c190348fdc527",
-                        "algo": 1
-                    },
-                    {
-                        "value": "1dee4be93d666e2228039c551e927b35",
-                        "algo": 2
-                    }
-                ],
-                "fileDate": "2020-08-24T01:01:39.123Z",
-                "fileLength": 653211,
-                "downloadCount": 11752168,
-                "downloadUrl": "https://edge.forgecdn.net/files/3040/523/jei_1.12.2-4.16.1.301.jar",
-                "gameVersions": [
-                    "1.12.2"
-                ],
-                "sortableGameVersions": [
-                    {
-                        "gameVersionName": "1.12.2",
-                        "gameVersionPadded": "0000000001.0000000012.0000000002",
-                        "gameVersion": "1.12.2",
-                        "gameVersionReleaseDate": "2017-09-18T05:00:00Z",
-                        "gameVersionTypeId": 628
-                    }
-                ],
-                "dependencies": [],
-                "alternateFileId": 0,
-                "isServerPack": false,
-                "fileFingerprint": 3089143260,
-                "modules": [
-                    {
-                        "name": "META-INF",
-                        "fingerprint": 2236405288
-                    },
-                    {
-                        "name": "mezz",
-                        "fingerprint": 2222830911
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 1488642189
-                    },
-                    {
-                        "name": "mcmod.info",
-                        "fingerprint": 3528499262
-                    },
-                    {
-                        "name": "assets",
-                        "fingerprint": 9943101
-                    }
-                ]
-            },
-            {
-                "id": 3043174,
-                "gameId": 432,
-                "modId": 238222,
-                "isAvailable": true,
-                "displayName": "jei_1.12.2-4.16.1.302.jar",
-                "fileName": "jei_1.12.2-4.16.1.302.jar",
+                "displayName": "Waystones 1.16.2-7.2.0 NO WORLDGEN",
+                "fileName": "Waystones_1.16.2-7.2.0.jar",
                 "releaseType": 2,
                 "fileStatus": 4,
                 "hashes": [
                     {
-                        "value": "3e88d2896ca868c3cedb65e117ad3a1b82488fa8",
+                        "value": "5ef14f7b47a6c0dd1e87d7c580332daa3a4d9927",
                         "algo": 1
                     },
                     {
-                        "value": "2dc4b6046812e64c514ff4d18bc5cb03",
+                        "value": "26d34f3ad00889cc43b7f43321298cbd",
                         "algo": 2
                     }
                 ],
-                "fileDate": "2020-08-27T01:47:46.263Z",
-                "fileLength": 653210,
-                "downloadCount": 6775770,
-                "downloadUrl": "https://edge.forgecdn.net/files/3043/174/jei_1.12.2-4.16.1.302.jar",
+                "fileDate": "2020-09-06T18:50:05.887Z",
+                "fileLength": 200278,
+                "downloadCount": 47092,
+                "downloadUrl": "https://edge.forgecdn.net/files/3051/110/Waystones_1.16.2-7.2.0.jar",
                 "gameVersions": [
-                    "1.12.2"
+                    "1.16.2"
                 ],
                 "sortableGameVersions": [
                     {
-                        "gameVersionName": "1.12.2",
-                        "gameVersionPadded": "0000000001.0000000012.0000000002",
-                        "gameVersion": "1.12.2",
-                        "gameVersionReleaseDate": "2017-09-18T05:00:00Z",
-                        "gameVersionTypeId": 628
+                        "gameVersionName": "1.16.2",
+                        "gameVersionPadded": "0000000001.0000000016.0000000002",
+                        "gameVersion": "1.16.2",
+                        "gameVersionReleaseDate": "2020-08-11T16:42:21.863Z",
+                        "gameVersionTypeId": 70886
                     }
                 ],
                 "dependencies": [],
                 "alternateFileId": 0,
                 "isServerPack": false,
-                "fileFingerprint": 1065578237,
+                "fileFingerprint": 2018409322,
                 "modules": [
                     {
                         "name": "META-INF",
-                        "fingerprint": 457918307
+                        "fingerprint": 1882107330
                     },
                     {
-                        "name": "mezz",
-                        "fingerprint": 2799571216
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 1488642189
-                    },
-                    {
-                        "name": "mcmod.info",
-                        "fingerprint": 3001924313
+                        "name": "net",
+                        "fingerprint": 2610296415
                     },
                     {
                         "name": "assets",
-                        "fingerprint": 9943101
+                        "fingerprint": 4257522397
+                    },
+                    {
+                        "name": "data",
+                        "fingerprint": 479223525
+                    },
+                    {
+                        "name": "pack.mcmeta",
+                        "fingerprint": 1362067209
                     }
                 ]
             },
             {
-                "id": 3272039,
+                "id": 3478251,
                 "gameId": 432,
-                "modId": 238222,
+                "modId": 245755,
                 "isAvailable": true,
-                "displayName": "jei-1.13.2-5.0.0.31.jar",
-                "fileName": "jei-1.13.2-5.0.0.31.jar",
-                "releaseType": 3,
-                "fileStatus": 4,
-                "hashes": [
-                    {
-                        "value": "aa15cdea079db8b91d75e3c68216df80a70545d8",
-                        "algo": 1
-                    },
-                    {
-                        "value": "1ee1f4fb4c6e199c02c7d15cbd0d2c8a",
-                        "algo": 2
-                    }
-                ],
-                "fileDate": "2021-04-11T03:49:47.687Z",
-                "fileLength": 690802,
-                "downloadCount": 8644,
-                "downloadUrl": "https://edge.forgecdn.net/files/3272/39/jei-1.13.2-5.0.0.31.jar",
-                "gameVersions": [
-                    "1.13.2"
-                ],
-                "sortableGameVersions": [
-                    {
-                        "gameVersionName": "1.13.2",
-                        "gameVersionPadded": "0000000001.0000000013.0000000002",
-                        "gameVersion": "1.13.2",
-                        "gameVersionReleaseDate": "2018-10-22T00:00:00Z",
-                        "gameVersionTypeId": 55023
-                    }
-                ],
-                "dependencies": [],
-                "alternateFileId": 0,
-                "isServerPack": false,
-                "fileFingerprint": 2700304635,
-                "modules": [
-                    {
-                        "name": "META-INF",
-                        "fingerprint": 1102858494
-                    },
-                    {
-                        "name": "mezz",
-                        "fingerprint": 2811918946
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 3652707984
-                    },
-                    {
-                        "name": "assets",
-                        "fingerprint": 88833534
-                    }
-                ]
-            },
-            {
-                "id": 3847103,
-                "gameId": 432,
-                "modId": 238222,
-                "isAvailable": true,
-                "displayName": "jei-1.18.2-9.7.0.209.jar",
-                "fileName": "jei-1.18.2-9.7.0.209.jar",
-                "releaseType": 1,
-                "fileStatus": 4,
-                "hashes": [
-                    {
-                        "value": "427cc2cf50f6a654fc2677bafe9988dad377fe86",
-                        "algo": 1
-                    },
-                    {
-                        "value": "f3a5f9de7ebd81f414e8efee622202c1",
-                        "algo": 2
-                    }
-                ],
-                "fileDate": "2022-06-25T04:20:30.257Z",
-                "fileLength": 993424,
-                "downloadCount": 28,
-                "downloadUrl": "https://edge.forgecdn.net/files/3847/103/jei-1.18.2-9.7.0.209.jar",
-                "gameVersions": [
-                    "1.18.2",
-                    "Forge"
-                ],
-                "sortableGameVersions": [
-                    {
-                        "gameVersionName": "1.18.2",
-                        "gameVersionPadded": "0000000001.0000000018.0000000002",
-                        "gameVersion": "1.18.2",
-                        "gameVersionReleaseDate": "2022-02-28T14:23:37.723Z",
-                        "gameVersionTypeId": 73250
-                    },
-                    {
-                        "gameVersionName": "Forge",
-                        "gameVersionPadded": "0",
-                        "gameVersion": "",
-                        "gameVersionReleaseDate": "2019-08-01T00:00:00Z",
-                        "gameVersionTypeId": 68441
-                    }
-                ],
-                "dependencies": [],
-                "alternateFileId": 0,
-                "isServerPack": false,
-                "fileFingerprint": 2451910159,
-                "modules": [
-                    {
-                        "name": "META-INF",
-                        "fingerprint": 2359114732
-                    },
-                    {
-                        "name": "mezz",
-                        "fingerprint": 3492014957
-                    },
-                    {
-                        "name": "assets",
-                        "fingerprint": 3451630566
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 1550930300
-                    }
-                ]
-            },
-            {
-                "id": 3885881,
-                "gameId": 432,
-                "modId": 238222,
-                "isAvailable": true,
-                "displayName": "jei-1.18.2-fabric-10.1.1.231.jar",
-                "fileName": "jei-1.18.2-fabric-10.1.1.231.jar",
-                "releaseType": 3,
-                "fileStatus": 4,
-                "hashes": [
-                    {
-                        "value": "fd91782acfe6470470a0f1c967690cb1d2ed7796",
-                        "algo": 1
-                    },
-                    {
-                        "value": "8f6993541629e2d17ee423f26d341e9e",
-                        "algo": 2
-                    }
-                ],
-                "fileDate": "2022-07-20T04:12:21.72Z",
-                "fileLength": 1093310,
-                "downloadCount": 0,
-                "downloadUrl": "https://edge.forgecdn.net/files/3885/881/jei-1.18.2-fabric-10.1.1.231.jar",
-                "gameVersions": [
-                    "Fabric",
-                    "1.18.2"
-                ],
-                "sortableGameVersions": [
-                    {
-                        "gameVersionName": "Fabric",
-                        "gameVersionPadded": "0",
-                        "gameVersion": "",
-                        "gameVersionReleaseDate": "2019-08-01T00:00:00Z",
-                        "gameVersionTypeId": 68441
-                    },
-                    {
-                        "gameVersionName": "1.18.2",
-                        "gameVersionPadded": "0000000001.0000000018.0000000002",
-                        "gameVersion": "1.18.2",
-                        "gameVersionReleaseDate": "2022-02-28T14:23:37.723Z",
-                        "gameVersionTypeId": 73250
-                    }
-                ],
-                "dependencies": [],
-                "alternateFileId": 0,
-                "isServerPack": false,
-                "fileFingerprint": 272844195,
-                "modules": [
-                    {
-                        "name": "META-INF",
-                        "fingerprint": 4017640229
-                    },
-                    {
-                        "name": "jei.accesswidener",
-                        "fingerprint": 1801728810
-                    },
-                    {
-                        "name": "assets",
-                        "fingerprint": 628780493
-                    },
-                    {
-                        "name": "fabric.mod.json",
-                        "fingerprint": 3916251286
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 1550930300
-                    },
-                    {
-                        "name": "jei.mixins.json",
-                        "fingerprint": 1759688962
-                    },
-                    {
-                        "name": "jei-1.18.2-fabric-refmap.json",
-                        "fingerprint": 1412800118
-                    },
-                    {
-                        "name": "mezz",
-                        "fingerprint": 254238903
-                    }
-                ]
-            },
-            {
-                "id": 3885884,
-                "gameId": 432,
-                "modId": 238222,
-                "isAvailable": true,
-                "displayName": "jei-1.18.2-forge-10.1.1.231.jar",
-                "fileName": "jei-1.18.2-forge-10.1.1.231.jar",
-                "releaseType": 3,
-                "fileStatus": 4,
-                "hashes": [
-                    {
-                        "value": "12cae555f4e286c6b98ad8c4dba9fb6ddc579802",
-                        "algo": 1
-                    },
-                    {
-                        "value": "3e91c9010d88ee1e6e154dfc35b1d819",
-                        "algo": 2
-                    }
-                ],
-                "fileDate": "2022-07-20T04:12:49.12Z",
-                "fileLength": 1074665,
-                "downloadCount": 0,
-                "downloadUrl": "https://edge.forgecdn.net/files/3885/884/jei-1.18.2-forge-10.1.1.231.jar",
-                "gameVersions": [
-                    "1.18.2",
-                    "Forge"
-                ],
-                "sortableGameVersions": [
-                    {
-                        "gameVersionName": "1.18.2",
-                        "gameVersionPadded": "0000000001.0000000018.0000000002",
-                        "gameVersion": "1.18.2",
-                        "gameVersionReleaseDate": "2022-02-28T14:23:37.723Z",
-                        "gameVersionTypeId": 73250
-                    },
-                    {
-                        "gameVersionName": "Forge",
-                        "gameVersionPadded": "0",
-                        "gameVersion": "",
-                        "gameVersionReleaseDate": "2019-08-01T00:00:00Z",
-                        "gameVersionTypeId": 68441
-                    }
-                ],
-                "dependencies": [],
-                "alternateFileId": 0,
-                "isServerPack": false,
-                "fileFingerprint": 3926512666,
-                "modules": [
-                    {
-                        "name": "META-INF",
-                        "fingerprint": 3558321083
-                    },
-                    {
-                        "name": "mezz",
-                        "fingerprint": 2026175432
-                    },
-                    {
-                        "name": "pack.mcmeta",
-                        "fingerprint": 1550930300
-                    },
-                    {
-                        "name": "assets",
-                        "fingerprint": 628780493
-                    }
-                ]
-            },
-            {
-                "id": 3885885,
-                "gameId": 432,
-                "modId": 238222,
-                "isAvailable": true,
-                "displayName": "jei-1.18.2-9.7.1.232.jar",
-                "fileName": "jei-1.18.2-9.7.1.232.jar",
+                "displayName": "waystones-8.1.3+0.jar",
+                "fileName": "waystones-8.1.3+0.jar",
                 "releaseType": 2,
                 "fileStatus": 4,
                 "hashes": [
                     {
-                        "value": "f6a680da25eab744f0e681e8b33e38175f34c9be",
+                        "value": "6bb6bb8e4114dd8800596962714da0dd325f353d",
                         "algo": 1
                     },
                     {
-                        "value": "05acfaf71fb0acd66660fa9813b9c7af",
+                        "value": "b1fdc55c0121efee8fb6caf440ee11f5",
                         "algo": 2
                     }
                 ],
-                "fileDate": "2022-07-20T04:15:42.63Z",
-                "fileLength": 993919,
-                "downloadCount": 0,
-                "downloadUrl": "https://edge.forgecdn.net/files/3885/885/jei-1.18.2-9.7.1.232.jar",
+                "fileDate": "2021-10-01T19:04:27.627Z",
+                "fileLength": 365345,
+                "downloadCount": 100353,
+                "downloadUrl": "https://edge.forgecdn.net/files/3478/251/waystones-8.1.3+0.jar",
                 "gameVersions": [
-                    "1.18.2",
+                    "1.17.1",
                     "Forge"
                 ],
                 "sortableGameVersions": [
                     {
-                        "gameVersionName": "1.18.2",
-                        "gameVersionPadded": "0000000001.0000000018.0000000002",
-                        "gameVersion": "1.18.2",
-                        "gameVersionReleaseDate": "2022-02-28T14:23:37.723Z",
-                        "gameVersionTypeId": 73250
+                        "gameVersionName": "1.17.1",
+                        "gameVersionPadded": "0000000001.0000000017.0000000001",
+                        "gameVersion": "1.17.1",
+                        "gameVersionReleaseDate": "2021-07-06T14:16:03.97Z",
+                        "gameVersionTypeId": 73242
                     },
                     {
                         "gameVersionName": "Forge",
@@ -620,412 +312,434 @@ class JsonConvertTests {
                         "gameVersionTypeId": 68441
                     }
                 ],
-                "dependencies": [],
+                "dependencies": [
+                    {
+                        "modId": 531761,
+                        "relationType": 3
+                    }
+                ],
                 "alternateFileId": 0,
                 "isServerPack": false,
-                "fileFingerprint": 2452098898,
+                "fileFingerprint": 2764826214,
                 "modules": [
                     {
                         "name": "META-INF",
-                        "fingerprint": 2035767613
+                        "fingerprint": 2567078589
                     },
                     {
-                        "name": "mezz",
-                        "fingerprint": 2927237128
+                        "name": "net",
+                        "fingerprint": 2328213798
                     },
                     {
                         "name": "assets",
-                        "fingerprint": 3451630566
+                        "fingerprint": 957087351
+                    },
+                    {
+                        "name": "data",
+                        "fingerprint": 3072314050
                     },
                     {
                         "name": "pack.mcmeta",
-                        "fingerprint": 1550930300
+                        "fingerprint": 2769305621
+                    },
+                    {
+                        "name": "waystones-icon.png",
+                        "fingerprint": 3649261042
+                    },
+                    {
+                        "name": "waystones.mixins.json",
+                        "fingerprint": 4080752435
+                    },
+                    {
+                        "name": "waystones.refmap.json",
+                        "fingerprint": 3720142189
+                    }
+                ]
+            },
+            {
+                "id": 3493690,
+                "gameId": 432,
+                "modId": 245755,
+                "isAvailable": true,
+                "displayName": "waystones-8.1.4+0.jar",
+                "fileName": "waystones-8.1.4+0.jar",
+                "releaseType": 1,
+                "fileStatus": 4,
+                "hashes": [
+                    {
+                        "value": "c05a6d4fffc1eb5b92113871e387b82e0c46df44",
+                        "algo": 1
+                    },
+                    {
+                        "value": "f0763865463868f7d028344b7cc409a4",
+                        "algo": 2
+                    }
+                ],
+                "fileDate": "2021-10-17T08:10:44.47Z",
+                "fileLength": 365345,
+                "downloadCount": 119953,
+                "downloadUrl": "https://edge.forgecdn.net/files/3493/690/waystones-8.1.4+0.jar",
+                "gameVersions": [
+                    "1.17.1"
+                ],
+                "sortableGameVersions": [
+                    {
+                        "gameVersionName": "1.17.1",
+                        "gameVersionPadded": "0000000001.0000000017.0000000001",
+                        "gameVersion": "1.17.1",
+                        "gameVersionReleaseDate": "2021-07-06T14:16:03.97Z",
+                        "gameVersionTypeId": 73242
+                    }
+                ],
+                "dependencies": [
+                    {
+                        "modId": 531761,
+                        "relationType": 3
+                    }
+                ],
+                "alternateFileId": 0,
+                "isServerPack": false,
+                "fileFingerprint": 4096900498,
+                "modules": [
+                    {
+                        "name": "META-INF",
+                        "fingerprint": 1953396316
+                    },
+                    {
+                        "name": "net",
+                        "fingerprint": 2328213798
+                    },
+                    {
+                        "name": "assets",
+                        "fingerprint": 957087351
+                    },
+                    {
+                        "name": "data",
+                        "fingerprint": 3072314050
+                    },
+                    {
+                        "name": "pack.mcmeta",
+                        "fingerprint": 2769305621
+                    },
+                    {
+                        "name": "waystones-icon.png",
+                        "fingerprint": 3649261042
+                    },
+                    {
+                        "name": "waystones.mixins.json",
+                        "fingerprint": 4080752435
+                    },
+                    {
+                        "name": "waystones.refmap.json",
+                        "fingerprint": 3720142189
+                    }
+                ]
+            },
+            {
+                "id": 3835119,
+                "gameId": 432,
+                "modId": 245755,
+                "isAvailable": true,
+                "displayName": "waystones-forge-1.19-11.0.0.jar",
+                "fileName": "waystones-forge-1.19-11.0.0.jar",
+                "releaseType": 1,
+                "fileStatus": 4,
+                "hashes": [
+                    {
+                        "value": "679b3c87f9145400ffb7fa81b2f918443cba72df",
+                        "algo": 1
+                    },
+                    {
+                        "value": "591352d7c666d2607ad4c473bb48ad10",
+                        "algo": 2
+                    }
+                ],
+                "fileDate": "2022-06-16T20:25:04.053Z",
+                "fileLength": 359351,
+                "downloadCount": 0,
+                "downloadUrl": "https://edge.forgecdn.net/files/3835/119/waystones-forge-1.19-11.0.0.jar",
+                "gameVersions": [
+                    "Forge",
+                    "1.19"
+                ],
+                "sortableGameVersions": [
+                    {
+                        "gameVersionName": "Forge",
+                        "gameVersionPadded": "0",
+                        "gameVersion": "",
+                        "gameVersionReleaseDate": "2019-08-01T00:00:00Z",
+                        "gameVersionTypeId": 68441
+                    },
+                    {
+                        "gameVersionName": "1.19",
+                        "gameVersionPadded": "0000000001.0000000019",
+                        "gameVersion": "1.19",
+                        "gameVersionReleaseDate": "2022-06-07T15:38:07.377Z",
+                        "gameVersionTypeId": 73407
+                    }
+                ],
+                "dependencies": [
+                    {
+                        "modId": 531761,
+                        "relationType": 3
+                    }
+                ],
+                "alternateFileId": 0,
+                "isServerPack": false,
+                "fileFingerprint": 2580803773,
+                "modules": [
+                    {
+                        "name": "META-INF",
+                        "fingerprint": 2731717902
+                    },
+                    {
+                        "name": "net",
+                        "fingerprint": 2705334492
+                    },
+                    {
+                        "name": "assets",
+                        "fingerprint": 1478786455
+                    },
+                    {
+                        "name": "data",
+                        "fingerprint": 1311553820
+                    },
+                    {
+                        "name": "pack.mcmeta",
+                        "fingerprint": 2905512523
+                    },
+                    {
+                        "name": "waystones-icon.png",
+                        "fingerprint": 3621685521
+                    },
+                    {
+                        "name": "waystones.mixins.json",
+                        "fingerprint": 2087209328
+                    },
+                    {
+                        "name": "waystones.refmap.json",
+                        "fingerprint": 2378598686
                     }
                 ]
             }
         ],
         "latestFilesIndexes": [
             {
-                "gameVersion": "1.18.2",
-                "fileId": 3885885,
-                "filename": "jei-1.18.2-9.7.1.232.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 73250,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.18.2",
-                "fileId": 3885884,
-                "filename": "jei-1.18.2-forge-10.1.1.231.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 73250,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.18.2",
-                "fileId": 3885881,
-                "filename": "jei-1.18.2-fabric-10.1.1.231.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 73250,
-                "modLoader": 4
-            },
-            {
                 "gameVersion": "1.19",
-                "fileId": 3884337,
-                "filename": "jei-1.19-forge-11.0.2.230.jar",
-                "releaseType": 3,
+                "fileId": 3835119,
+                "filename": "waystones-forge-1.19-11.0.0.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 73407,
                 "modLoader": 1
             },
             {
-                "gameVersion": "1.19",
-                "fileId": 3884336,
-                "filename": "jei-1.19-fabric-11.0.2.230.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 73407,
-                "modLoader": 4
-            },
-            {
                 "gameVersion": "1.18.2",
-                "fileId": 3847103,
-                "filename": "jei-1.18.2-9.7.0.209.jar",
+                "fileId": 3830849,
+                "filename": "waystones-forge-1.18.2-10.1.0.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 73250,
                 "modLoader": 1
             },
             {
                 "gameVersion": "1.18.1",
-                "fileId": 3723162,
-                "filename": "jei-1.18.1-9.4.1.172.jar",
+                "fileId": 3658046,
+                "filename": "waystones-forge-1.18.1-9.0.4.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 73250,
                 "modLoader": 1
             },
             {
-                "gameVersion": "1.18.1",
-                "fileId": 3712260,
-                "filename": "jei-1.18.1-9.4.1.168.jar",
-                "releaseType": 2,
+                "gameVersion": "1.18",
+                "fileId": 3548808,
+                "filename": "waystones-forge-1.18-9.0.0.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 73250,
+                "modLoader": 1
+            },
+            {
+                "gameVersion": "1.17.1",
+                "fileId": 3515761,
+                "filename": "waystones-8.2.0+0.jar",
+                "releaseType": 1,
+                "gameVersionTypeId": 73242,
                 "modLoader": 1
             },
             {
                 "gameVersion": "1.16.5",
-                "fileId": 3681294,
-                "filename": "jei-1.16.5-7.7.1.152.jar",
-                "releaseType": 2,
+                "fileId": 3515707,
+                "filename": "Waystones_1.16.5-7.6.4.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 70886,
                 "modLoader": 1
             },
             {
                 "gameVersion": "1.17.1",
-                "fileId": 3596034,
-                "filename": "jei-1.17.1-8.3.1.62.jar",
+                "fileId": 3493690,
+                "filename": "waystones-8.1.4+0.jar",
+                "releaseType": 1,
+                "gameVersionTypeId": 73242,
+                "modLoader": null
+            },
+            {
+                "gameVersion": "1.17.1",
+                "fileId": 3478251,
+                "filename": "waystones-8.1.3+0.jar",
                 "releaseType": 2,
                 "gameVersionTypeId": 73242,
                 "modLoader": 1
             },
             {
-                "gameVersion": "1.18",
-                "fileId": 3550020,
-                "filename": "jei-1.18-9.0.0.40.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 73250,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.13.2",
-                "fileId": 3272039,
-                "filename": "jei-1.13.2-5.0.0.31.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 55023,
+                "gameVersion": "1.16.5",
+                "fileId": 3332276,
+                "filename": "Waystones_1.16.5-7.6.2.jar",
+                "releaseType": 1,
+                "gameVersionTypeId": 70886,
                 "modLoader": null
             },
             {
-                "gameVersion": "1.15.2",
-                "fileId": 3272032,
-                "filename": "jei-1.15.2-6.0.3.16.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 68722,
+                "gameVersion": "1.16.3",
+                "fileId": 3222129,
+                "filename": "Waystones_1.16.5-7.4.0.jar",
+                "releaseType": 1,
+                "gameVersionTypeId": 70886,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.16.4",
-                "fileId": 3245003,
-                "filename": "jei-1.16.4-7.6.1.74.jar",
-                "releaseType": 2,
+                "fileId": 3222129,
+                "filename": "Waystones_1.16.5-7.4.0.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 70886,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.16.3",
-                "fileId": 3104018,
-                "filename": "jei-1.16.3-7.6.0.51.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 70886,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.16.3",
-                "fileId": 3071356,
-                "filename": "jei-1.16.3-7.4.0.40.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 70886,
-                "modLoader": 1
+                "modLoader": null
             },
             {
                 "gameVersion": "1.16.2",
-                "fileId": 3060935,
-                "filename": "jei-1.16.2-7.3.2.28.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 70886,
-                "modLoader": 1
-            },
-            {
-                "gameVersion": "1.12.2",
-                "fileId": 3043174,
-                "filename": "jei_1.12.2-4.16.1.302.jar",
+                "fileId": 3051110,
+                "filename": "Waystones_1.16.2-7.2.0.jar",
                 "releaseType": 2,
-                "gameVersionTypeId": 628,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.12.2",
-                "fileId": 3040523,
-                "filename": "jei_1.12.2-4.16.1.301.jar",
-                "releaseType": 1,
-                "gameVersionTypeId": 628,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.14.4",
-                "fileId": 3039707,
-                "filename": "jei-1.14.4-6.0.1.30.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 64806,
+                "gameVersionTypeId": 70886,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.16.1",
-                "fileId": 3028697,
-                "filename": "jei-1.16.1-7.0.1.10.jar",
-                "releaseType": 3,
+                "fileId": 3035119,
+                "filename": "Waystones_1.16.1-7.1.1.jar",
+                "releaseType": 2,
                 "gameVersionTypeId": 70886,
-                "modLoader": 1
+                "modLoader": null
             },
             {
-                "gameVersion": "1.15.1",
-                "fileId": 2855456,
-                "filename": "jei-1.15.1-6.0.0.1.jar",
-                "releaseType": 3,
+                "gameVersion": "1.15.2",
+                "fileId": 2991235,
+                "filename": "Waystones_1.15.2-6.0.2.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 68722,
                 "modLoader": null
             },
             {
-                "gameVersion": "1.14.3",
-                "fileId": 2738328,
-                "filename": "jei-1.14.3-6.0.0.8.jar",
-                "releaseType": 3,
+                "gameVersion": "1.15.2",
+                "fileId": 2903834,
+                "filename": "Waystones_1.15.2-6.0.1.jar",
+                "releaseType": 2,
+                "gameVersionTypeId": 68722,
+                "modLoader": null
+            },
+            {
+                "gameVersion": "1.14.4",
+                "fileId": 2872947,
+                "filename": "Waystones_1.14.4-5.1.1.jar",
+                "releaseType": 2,
                 "gameVersionTypeId": 64806,
                 "modLoader": null
             },
             {
-                "gameVersion": "1.14.2",
-                "fileId": 2733474,
-                "filename": "jei-1.14.2-6.0.0.3.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 64806,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.10.2",
-                "fileId": 2561516,
-                "filename": "jei_1.10.2-3.14.8.422.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 572,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.12",
-                "fileId": 2485363,
-                "filename": "jei_1.12.2-4.7.11.102.jar",
-                "releaseType": 2,
+                "gameVersion": "1.12.2",
+                "fileId": 2859589,
+                "filename": "Waystones_1.12.2-4.1.0.jar",
+                "releaseType": 1,
                 "gameVersionTypeId": 628,
                 "modLoader": null
             },
             {
-                "gameVersion": "1.12.1",
-                "fileId": 2485363,
-                "filename": "jei_1.12.2-4.7.11.102.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 628,
+                "gameVersion": "1.7.10",
+                "fileId": 2559125,
+                "filename": "Waystones-mc1.7.10-1.0.12.jar",
+                "releaseType": 1,
+                "gameVersionTypeId": 5,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.12",
-                "fileId": 2478647,
-                "filename": "jei_1.12.1-4.7.8.95.jar",
+                "fileId": 2489635,
+                "filename": "Waystones_1.12.1-4.0.17.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 628,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.12.1",
-                "fileId": 2478647,
-                "filename": "jei_1.12.1-4.7.8.95.jar",
+                "fileId": 2464463,
+                "filename": "Waystones_1.12.1-4.0.15.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 628,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.11.2",
-                "fileId": 2461378,
-                "filename": "jei_1.11.2-4.5.1.296.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 599,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.11.2",
-                "fileId": 2453428,
-                "filename": "jei_1.11.2-4.5.0.294.jar",
+                "fileId": 2457030,
+                "filename": "Waystones_1.11.2-3.0.17.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 599,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.12",
-                "fileId": 2442204,
-                "filename": "jei_1.12-4.7.0.68.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 628,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8.9",
-                "fileId": 2431977,
-                "filename": "jei_1.8.9-2.28.18.187.jar",
-                "releaseType": 1,
-                "gameVersionTypeId": 4,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.10.2",
-                "fileId": 2428966,
-                "filename": "jei_1.10.2-3.14.7.420.jar",
+                "fileId": 2457029,
+                "filename": "Waystones_1.10.2-2.0.13.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 572,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.11",
-                "fileId": 2360492,
-                "filename": "jei_1.11-4.1.1.208.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 599,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.11",
-                "fileId": 2350616,
-                "filename": "jei_1.11-4.0.4.199.jar",
-                "releaseType": 3,
-                "gameVersionTypeId": 599,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.9.4",
-                "fileId": 2313650,
-                "filename": "jei_1.9.4-3.6.8.225.jar",
+                "fileId": 2382350,
+                "filename": "Waystones_1.11.2-3.0.10.jar",
                 "releaseType": 1,
-                "gameVersionTypeId": 552,
+                "gameVersionTypeId": 599,
                 "modLoader": null
             },
             {
                 "gameVersion": "1.10",
-                "fileId": 2310912,
-                "filename": "jei_1.10-3.7.1.219.jar",
+                "fileId": 2326369,
+                "filename": "Waystones_1.10.2-2.0.4.jar",
                 "releaseType": 1,
                 "gameVersionTypeId": 572,
                 "modLoader": null
             },
             {
-                "gameVersion": "1.9.4",
-                "fileId": 2306298,
-                "filename": "jei_1.9.4-3.6.2.211.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 552,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.9",
-                "fileId": 2305823,
-                "filename": "jei_1.9.4-3.4.4.208.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 552,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.9",
-                "fileId": 2304545,
-                "filename": "jei_1.9.4-3.4.3.207.jar",
+                "gameVersion": "1.10.1",
+                "fileId": 2326330,
+                "filename": "Waystones_1.10.2-2.0.3.jar",
                 "releaseType": 1,
-                "gameVersionTypeId": 552,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8.9",
-                "fileId": 2292565,
-                "filename": "jei_1.8.9-2.28.14.182.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 4,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8.8",
-                "fileId": 2275072,
-                "filename": "jei_1.8.9-2.16.2.78.jar",
-                "releaseType": 1,
-                "gameVersionTypeId": 4,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8",
-                "fileId": 2273901,
-                "filename": "jei_1.8-2.14.0.139.jar",
-                "releaseType": 1,
-                "gameVersionTypeId": 4,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8.8",
-                "fileId": 2270928,
-                "filename": "jei_1.8.8-2.8.3.39.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 4,
-                "modLoader": null
-            },
-            {
-                "gameVersion": "1.8",
-                "fileId": 2270927,
-                "filename": "jei_1.8-1.8.3.96.jar",
-                "releaseType": 2,
-                "gameVersionTypeId": 4,
+                "gameVersionTypeId": 572,
                 "modLoader": null
             }
         ],
-        "dateCreated": "2015-11-23T22:55:58.84Z",
-        "dateModified": "2022-07-20T04:20:59.683Z",
-        "dateReleased": "2022-07-20T04:15:42.63Z",
+        "dateCreated": "2016-06-02T23:55:20.133Z",
+        "dateModified": "2022-06-16T20:28:06.873Z",
+        "dateReleased": "2022-06-16T20:25:04.053Z",
         "allowModDistribution": true,
-        "gamePopularityRank": 1,
+        "gamePopularityRank": 9,
         "isAvailable": true,
         "thumbsUpCount": 0
     }
 }"""
-        val mod = mapper.readValue<DataResponse<Mod>>(modJson)
-        println(mod)
+        // val resp = mapper.readValue<DataResponse<Mod>>(json)
+        // val resp = tpl.parsel(json, DataResponse::class.java, Mod::class.java)
+        val resp = tpl.parser(json, object: TypeReference<DataResponse<Mod>>() {})
+        println(resp)
     }
+    // endregion
 
     @Test
     fun testParseImage() {
@@ -1037,8 +751,8 @@ class JsonConvertTests {
       "thumbnailUrl": "https://media.forgecdn.net/avatars/thumbnails/29/69/256/256/635838945588716414.jpeg",
       "url": "https://media.forgecdn.net/avatars/29/69/635838945588716414.jpeg"
     }"""
-        var image = mapper.readValue<Image>(json)
-        println(image)
+        val assrt = mapper.readValue<ModAsset>(json)
+        println(assrt)
     }
 }
 

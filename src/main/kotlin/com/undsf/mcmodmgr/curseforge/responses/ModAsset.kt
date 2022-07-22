@@ -2,7 +2,7 @@ package com.undsf.mcmodmgr.curseforge.responses
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-data class Image(
+data class ModAsset(
         @JsonProperty
         val id: Int?,
 
@@ -19,5 +19,9 @@ data class Image(
         val thumbnailUrl: String?,
 
         @JsonProperty
-        val url: String?
-) {}
+        val url: String
+) {
+    override fun toString(): String {
+        return "$modId/$id: $url"
+    }
+}

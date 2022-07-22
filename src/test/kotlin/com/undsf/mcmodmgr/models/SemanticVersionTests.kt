@@ -1,5 +1,6 @@
 package com.undsf.mcmodmgr.models
 
+import com.undsf.mcmodmgr.commons.SemanticVersion
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 

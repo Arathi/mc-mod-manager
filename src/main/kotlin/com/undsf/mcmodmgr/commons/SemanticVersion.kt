@@ -1,4 +1,4 @@
-package com.undsf.mcmodmgr.models
+package com.undsf.mcmodmgr.commons
 
 import mu.KotlinLogging
 
