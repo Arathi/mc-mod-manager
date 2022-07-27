@@ -69,7 +69,7 @@ data class SearchModsCondition(
         if (categoryId != null) form.add("categoryId", "$categoryId")
         if (gameVersion != null) form.add("gameVersion", gameVersion)
         if (searchFilter != null) form.add("searchFilter", searchFilter)
-        if (sortField != null) form.add("sortField", sortField.ordinal.toString())
+        if (sortField != null) form.add("sortField", sortField.id.toString())
         if (sortOrder != null) form.add("sortOrder", sortOrder)
         if (modLoaderType != null) form.add("sortOrder", modLoaderType.ordinal.toString())
         if (gameVersionTypeId != null) form.add("gameVersionTypeId", "$gameVersionTypeId")

@@ -1,6 +1,7 @@
 package com.undsf.mcmodmgr.util
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -16,6 +17,10 @@ class JSON {
 
         fun stringify(obj: Any) : String? {
             return jsonTemplate.stringify(obj)
+        }
+
+        fun parse(json: String) : JsonNode? {
+            return jsonTemplate.parse(json)
         }
 
         fun <T> parse(json: String, type: Class<T>) : T? {

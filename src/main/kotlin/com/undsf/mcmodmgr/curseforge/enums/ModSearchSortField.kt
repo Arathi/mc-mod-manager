@@ -1,6 +1,9 @@
 package com.undsf.mcmodmgr.curseforge.enums
 
+import com.fasterxml.jackson.annotation.JsonValue
+
 enum class ModSearchSortField(
+        @JsonValue
         var id: Int,
         var description: String) {
     None(0, "无"),

@@ -3,6 +3,7 @@ package com.undsf.mcmodmgr.util
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JavaType
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +21,16 @@ class JsonTemplate(mapper: ObjectMapper) {
         }
         catch (ex: JsonProcessingException) {
             log.warn("JSON序列化发生异常", ex)
+        }
+        return null
+    }
+
+    fun parse(json: String) : JsonNode? {
+        try {
+            return mapper.readTree(json)
+        }
+        catch (ex: JsonProcessingException) {
+            log.warn("JSON反序列化发生异常", ex)
         }
         return null
     }

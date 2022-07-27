@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.jayway.jsonpath.TypeRef
+import com.undsf.mcmodmgr.curseforge.enums.FileReleaseType
+import com.undsf.mcmodmgr.curseforge.enums.ModLoaderType
 import com.undsf.mcmodmgr.curseforge.responses.DataResponse
 import com.undsf.mcmodmgr.curseforge.responses.ModAsset
 import com.undsf.mcmodmgr.curseforge.responses.Mod
@@ -754,6 +756,25 @@ class JsonConvertTests {
         val assrt = mapper.readValue<ModAsset>(json)
         println(assrt)
     }
+
+    @Test
+    fun testEnumConvert() {
+        var json = """{
+    "gameVersion": "1.19",
+    "fileId": 3835119,
+    "filename": "waystones-forge-1.19-11.0.0.jar",
+    "releaseType": 1,
+    "gameVersionTypeId": 73407,
+    "modLoader": 1
+}"""
+        var fileIndex = JSON.parse(json, FileIndexNg::class.java)
+        assertNotNull(fileIndex, "转换出的FileIndex不能为null")
+
+        if (fileIndex != null) {
+            println(fileIndex)
+            println(JSON.stringify(fileIndex))
+        }
+    }
 }
 
 data class TestStruct(
@@ -772,3 +793,18 @@ data class TestStruct(
         @JsonProperty
         var executeTime: LocalDateTime?
 )
+
+data class FileIndexNg(
+        var gameVersion: String,
+        var fileId: Int,
+        var filename: String,
+        var releaseType: FileReleaseType,
+        var gameVersionTypeId: Int,
+        var modLoader: ModLoaderType
+) {
+    override fun toString(): String {
+        val releaseTypeName = releaseType.description
+        val modLoaderName = modLoader.name
+        return "$fileId: [$releaseTypeName] ${gameVersion}-${modLoaderName} $filename"
+    }
+}
