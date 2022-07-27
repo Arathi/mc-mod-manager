@@ -17,14 +17,11 @@ class CurseForgeConfiguration {
     @Autowired
     lateinit var jsonTpl: JsonTemplate
 
-    @Value("\${curse-forge.base-url:https://api.curseforge.com}")
-    lateinit var baseUrl: String
-
-    @Value("\${curse-forge.api-key:}")
-    lateinit var apiKey: String
+    @Autowired
+    lateinit var options: CurseForgeOptions
 
     @Bean("curse-forge-api-client")
     fun getCurseForgeApiClient() : CurseForgeApiClient {
-        return CurseForgeApiClient(httpClient, apiKey, baseUrl)
+        return CurseForgeApiClient(httpClient, options)
     }
 }
