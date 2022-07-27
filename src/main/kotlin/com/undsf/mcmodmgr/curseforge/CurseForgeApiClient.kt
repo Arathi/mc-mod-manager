@@ -1,22 +1,30 @@
 package com.undsf.mcmodmgr.curseforge
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.undsf.mcmodmgr.config.CurseForgeOptions
 import com.undsf.mcmodmgr.curseforge.requests.SearchModsCondition
 import com.undsf.mcmodmgr.curseforge.responses.DataResponse
+import com.undsf.mcmodmgr.curseforge.responses.File
 import com.undsf.mcmodmgr.curseforge.responses.Mod
 import com.undsf.mcmodmgr.curseforge.responses.PaginationResponse
 import com.undsf.mcmodmgr.util.BaseApiClient
 import com.undsf.mcmodmgr.util.JSON
+import mu.KotlinLogging
 import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.net.URL
+import java.nio.file.Paths
+
+private val log = KotlinLogging.logger {}
 
 class CurseForgeApiClient constructor(
         httpClient: OkHttpClient,
-        apiKey: String,
-        baseUrl: String = "https://api.curseforge.com"
-) : BaseApiClient(httpClient, baseUrl) {
-    var apiKey: String = apiKey
+        options: CurseForgeOptions
+) : BaseApiClient(httpClient, options.baseUrl) {
+    var apiKey: String = options.apiKey
+    var indexesPath: String = options.indexesPath
+    var modsPath: String = options.modsPath
 
     fun addApiKey(headers: MutableMap<String, String>) {
         headers["x-api-key"] = apiKey
@@ -63,5 +71,32 @@ class CurseForgeApiClient constructor(
         }
 
         return mods
+    }
+
+    fun getModFile(modId: Int, fileId: Int): File? {
+        val uri = "/v1/mods/${modId}/files/${fileId}"
+        val headers = LinkedHashMap<String, String>()
+        addApiKey(headers)
+
+        var req = buildGetRequest(uri, headers = headers)
+        val respMsg = sendRequest(req, object: TypeReference<DataResponse<File>>() {}) ?: return null
+        return respMsg.data
+    }
+
+    fun downloadMod(modId: Int, fileId: Int) : Int {
+        val file = getModFile(modId, fileId)
+        if (file == null) {
+            log.warn { "MOD文件（${modId}/${fileId}）信息获取失败" }
+            return 0
+        }
+
+        if (file.downloadUrl == null) {
+            log.warn { "MOD文件下载地址无效" }
+            return 0
+        }
+
+        val url = URL(file.downloadUrl)
+        val path = Paths.get("${modsPath}/${modId}/${fileId}/${file.fileName}")
+        return download(path, url.toString())
     }
 }

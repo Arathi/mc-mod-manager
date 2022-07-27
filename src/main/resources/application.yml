@@ -1,2 +1,10 @@
+spring:
+  profiles:
+    active:
+      - dev
+
 curse-forge:
+  base-url: ${CURSE_FORGE_API_URL:https://api.curseforge.com}
   api-key: ${CURSE_FORGE_API_KEY:}
+  indexes-path: ${CURSE_FORGE_INDEXES_PATH:}
+  mods-path: ${CURSE_FORGE_MODS_PATH:}
