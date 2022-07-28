@@ -44,3 +44,4 @@ gradlew.bat
 ### 配置文件 ###
 **/application-*.yml
 **/application-*.properties
+modpack.json

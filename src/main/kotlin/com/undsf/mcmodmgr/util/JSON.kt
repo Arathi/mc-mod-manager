@@ -15,8 +15,8 @@ class JSON {
     companion object {
         private lateinit var jsonTemplate: JsonTemplate
 
-        fun stringify(obj: Any) : String? {
-            return jsonTemplate.stringify(obj)
+        fun stringify(obj: Any, pretty: Boolean = false) : String? {
+            return jsonTemplate.stringify(obj, pretty)
         }
 
         fun parse(json: String) : JsonNode? {

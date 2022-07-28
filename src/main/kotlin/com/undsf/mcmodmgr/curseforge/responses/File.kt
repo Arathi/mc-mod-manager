@@ -3,6 +3,7 @@ package com.undsf.mcmodmgr.curseforge.responses
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.undsf.mcmodmgr.curseforge.enums.FileReleaseType
 import java.time.LocalDateTime
 
 data class File(
@@ -25,7 +26,7 @@ data class File(
         var fileName: String,
 
         @JsonProperty
-        var releaseType: Int,
+        var releaseType: FileReleaseType,
 
         @JsonProperty
         var fileStatus: Int,
@@ -79,15 +80,7 @@ data class File(
     }
 
     override fun toString(): String {
-        var releaseTypeName = "U"
-        when (releaseType) {
-            1 -> releaseTypeName = "R" // Release
-            2 -> releaseTypeName = "B" // Beta
-            3 -> releaseTypeName = "A" // Alpha
-        }
-
         var gameVersion = gameVersions.first()
-
-        return "$id: [$releaseTypeName] ${gameVersion} $fileName $fileDate"
+        return "$id: [${releaseType.description}] $gameVersion $fileName $fileDate"
     }
 }

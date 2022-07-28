@@ -15,8 +15,11 @@ class JsonTemplate(mapper: ObjectMapper) {
     var mapper: ObjectMapper = mapper
     var types = HashMap<String, JavaType>()
 
-    fun stringify(obj: Any) : String? {
+    fun stringify(obj: Any, pretty: Boolean = false) : String? {
         try {
+            if (pretty) {
+                return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(obj)
+            }
             return mapper.writeValueAsString(obj)
         }
         catch (ex: JsonProcessingException) {
