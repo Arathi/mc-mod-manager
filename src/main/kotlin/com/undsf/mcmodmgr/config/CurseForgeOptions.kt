@@ -26,4 +26,14 @@ class CurseForgeOptions {
      * MOD下载目录
      */
     var modsPath: String = ""
+
+    /**
+     * 忽略文件大小检查
+     */
+    var ignoreSizeCheck: Boolean = false
+
+    /**
+     * 忽略文件哈希检查
+     */
+    var ignoreHashCheck: Boolean = false
 }

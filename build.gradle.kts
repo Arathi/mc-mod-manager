@@ -25,16 +25,13 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.squareup.okhttp3:okhttp:4.10.0")
 	implementation("org.apache.tuweni:tuweni-toml:2.2.0")
-	implementation("com.baomidou:mybatis-plus-boot-starter:3.5.2")
     implementation("io.github.microutils:kotlin-logging:2.1.23")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	runtimeOnly("com.h2database:h2")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

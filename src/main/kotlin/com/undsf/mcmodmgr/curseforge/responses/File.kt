@@ -38,10 +38,10 @@ data class File(
         var fileDate: LocalDateTime,
 
         @JsonProperty
-        var fileLength: Int,
+        var fileLength: Long,
 
         @JsonProperty
-        var downloadCount: Int,
+        var downloadCount: Long,
 
         @JsonProperty
         var downloadUrl: String?,

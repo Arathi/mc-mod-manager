@@ -9,9 +9,17 @@ data class FileIndex(
         var filename: String,
         var releaseType: FileReleaseType,
         var gameVersionTypeId: Int,
-        var modLoader: ModLoaderType
+        var modLoader: ModLoaderType?
 ) {
     override fun toString(): String {
-        return "$fileId: [${releaseType.description}] ${gameVersion}-${modLoader.name} $filename"
+        val builder = StringBuilder()
+        builder.append("$fileId: ")
+        builder.append("[${releaseType.name.first()}] ")
+        builder.append(gameVersion)
+        if (modLoader != null) {
+            builder.append("-${modLoader?.name?.lowercase()}")
+        }
+        builder.append(" $filename")
+        return builder.toString()
     }
 }
