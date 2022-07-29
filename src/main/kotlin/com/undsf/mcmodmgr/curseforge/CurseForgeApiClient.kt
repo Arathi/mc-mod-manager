@@ -16,6 +16,7 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.io.File
+import java.nio.file.Path
 
 private val log = KotlinLogging.logger {}
 
@@ -193,26 +194,26 @@ class CurseForgeApiClient constructor(
         return respMsg.data
     }
 
-    fun downloadMod(modId: Int, fileId: Int) : Int {
+    fun downloadMod(modId: Int, fileId: Int) : Path? {
         val file = getModFile(modId, fileId)
         if (file == null) {
             log.warn { "MOD文件（${modId}/${fileId}）信息获取失败" }
-            return 0
+            return null
         }
         return downloadMod(file)
     }
 
-    fun downloadMod(file: ModFile) : Int {
+    fun downloadMod(file: ModFile) : Path? {
+        // 检测URL是否有效
         if (file.downloadUrl == null || file.downloadUrl!!.trim().isEmpty()) {
             log.warn { "MOD文件下载地址无效" }
-            return 0
+            return null
         }
 
-        // 检查文件是否存在
         val path = Paths.get("${options.modsPath}/${file.modId}/${file.id}/${file.fileName}")
-
         do {
             if (Files.exists(path)) {
+                // 检查文件是否存在
                 if (!options.ignoreSizeCheck) {
                     log.info { "正在检查已存在文件${file.fileName}的大小" }
                     val size = Files.size(path)
@@ -239,13 +240,15 @@ class CurseForgeApiClient constructor(
                 }
 
                 log.info { "MOD文件已存在" }
-                return 0
+                return path
             }
         }
         while (false)
 
         val url = URL(file.downloadUrl)
-        return download(path, url.toString())
+        val downloadedBytes = download(path, url.toString())
+
+        return path
     }
 
     companion object {

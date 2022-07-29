@@ -12,14 +12,13 @@ import com.undsf.mcmodmgr.models.ModPack
 import com.undsf.mcmodmgr.util.JSON
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
-import java.nio.file.Files
-import java.nio.file.OpenOption
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
+import java.io.IOException
+import java.nio.file.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -32,6 +31,18 @@ class McModManagerRunner : ApplicationRunner {
 
     @Autowired
     lateinit var client: CurseForgeApiClient
+
+    /**
+     * 使用硬连接
+     */
+    @Value("\${mmm.install.use-hard-link:false}")
+    var useHardLink: Boolean = false
+
+    /**
+     * 使用软连接
+     */
+    @Value("\${mmm.install.use-symbolic-link:false}")
+    var useSymbolicLink: Boolean = false
 
     override fun run(args: ApplicationArguments?) {
         if (args == null) {
@@ -63,6 +74,7 @@ class McModManagerRunner : ApplicationRunner {
             "init" -> init(args)
             "search" -> search(args)
             "download" -> download(args)
+            "install" -> install(args)
         }
     }
 
@@ -90,6 +102,31 @@ Usage: mmm command [options...]
 """.trim())
     }
 
+    // region 公共
+    private fun loadModPack() : ModPack? {
+        if (modPack != null) {
+            return modPack
+        }
+
+        val userDir = System.getProperty("user.dir")
+        val modPackPath = Paths.get("${userDir}/modpack.json")
+        if (!Files.exists(modPackPath)) {
+            log.warn { "ModFile文件不存在！" }
+            return null
+        }
+
+        val json = Files.readString(modPackPath)
+        modPack = JSON.parse(json, ModPack::class.java)
+        if (modPack == null) {
+            log.warn { "ModPack配置文件加载失败" }
+            return null
+        }
+
+        return modPack
+    }
+    // endregion
+
+    // region init 初始化
     private fun init(args: ApplicationArguments) {
         val now = LocalDateTime.now()
         var name = "modpack-${now.format(DateTimeFormatter.ISO_DATE_TIME)}"  // 生成名称
@@ -131,29 +168,9 @@ Usage: mmm command [options...]
         Files.writeString(path, json, StandardOpenOption.CREATE)
         log.info { "ModPack配置文件生成完成" }
     }
+    // endregion
 
-    private fun loadModPack() : ModPack? {
-        if (modPack != null) {
-            return modPack
-        }
-
-        val userDir = System.getProperty("user.dir")
-        val modPackPath = Paths.get("${userDir}/modpack.json")
-        if (!Files.exists(modPackPath)) {
-            log.warn { "ModFile文件不存在！" }
-            return null
-        }
-
-        val json = Files.readString(modPackPath)
-        modPack = JSON.parse(json, ModPack::class.java)
-        if (modPack == null) {
-            log.warn { "ModPack配置文件加载失败" }
-            return null
-        }
-
-        return modPack
-    }
-
+    // region search 搜索
     private fun searchForgeMods(
             searchFilter: String?,
             slug: String?,
@@ -197,19 +214,22 @@ Usage: mmm command [options...]
             println("$index: $result")
         }
     }
+    // endregion
 
+    // region download 下载
     private fun download(
             modId: Int?,
             slug: String?,
             version: String?,
-            downloadDependency: Boolean = false) {
+            downloadDependency: Boolean = false) : List<Path> {
+        val paths = arrayListOf<Path>()
         var mod: CurseForgeMod? = null
 
         if (modId == null) {
             // 通过slug获取mod信息
             if (slug == null || slug.isEmpty()) {
                 log.warn { "未指定modId，也未设置有效的slug" }
-                return
+                return paths
             }
 
             val mods = searchForgeMods(null, slug, 1)
@@ -221,7 +241,7 @@ Usage: mmm command [options...]
                 for ((index, m) in mods.withIndex()) {
                     println("${index}: $m")
                 }
-                return
+                return paths
             }
 
             mod = mods.first()
@@ -233,7 +253,7 @@ Usage: mmm command [options...]
 
         if (mod == null) {
             log.warn { "未找到指定mod" }
-            return
+            return paths
         }
 
         // 根据modId获取file
@@ -271,121 +291,55 @@ Usage: mmm command [options...]
         }
 
         if (file != null) {
-            client.downloadMod(file)
+            val downloaded = client.downloadMod(file)
+            if (downloaded != null) {
+                paths.add(downloaded)
+            }
+            else {
+                log.info { "${file.fileName}下载失败" }
+            }
 
             // 递归下载
             if (downloadDependency) {
-                log.info { "${file.fileName}有${file.dependencies.size}个依赖项" }
-                for (dep in file.dependencies) {
-                    if (dep.relationType == RelationType.RequiredDependency) {
-                        log.info { "开始下载${file.fileName}的依赖项${dep.modId}" }
-                        download(
-                                dep.modId,
-                                null,
-                                null,
-                                true
-                        )
+                if (file.dependencies.isNotEmpty()) {
+                    log.info { "${file.fileName}有${file.dependencies.size}个依赖项" }
+                    for (dep in file.dependencies) {
+                        if (dep.relationType == RelationType.RequiredDependency) {
+                            log.info { "开始下载${file.fileName}的依赖项${dep.modId}" }
+                            val downloaded = download(
+                                    dep.modId,
+                                    null,
+                                    null,
+                                    true
+                            )
+                            paths.addAll(downloaded)
+                        }
                     }
                 }
-            }
-        }
-    }
-
-    private fun downloadOld(args: ApplicationArguments) {
-        loadModPack()
-        if (modPack == null) {
-            log.warn { "无法读取MC及Mod加载器版本信息" }
-            return
-        }
-
-        if (args.nonOptionArgs.size < 2) {
-            log.warn { "请输入Mod关键字" }
-            return
-        }
-
-        val slug = args.nonOptionArgs[1]
-        val searchResults = searchForgeMods(null, slug, 1)
-
-        if (searchResults.size != 1) {
-            if (searchResults.size > 1) {
-                log.info { "slug为${slug}的MOD并不唯一" }
+                else {
+                    log.info { "${file.fileName}没有依赖项" }
+                }
             }
             else {
-                log.info { "找不到slug为${slug}的MOD" }
-            }
-            return
-        }
-
-        var version: String? = null
-        if (args.containsOption("version")) {
-            version = args.getOptionValues("version").first()
-        }
-        var id: Int? = null
-        if (args.containsOption("id")) {
-            id = args.getOptionValues("id").first().toInt()
-        }
-
-        val searchResult = searchResults.first()
-        val files = client.getModFiles(
-                searchResult.id,
-                modPack?.mcVersion,
-                ModLoaderType.Forge
-        )
-
-        log.info { "找到${slug}的文件${files.size}个" }
-        var file: File? = null
-        if (id != null) {
-            for (f in files) {
-                if (f.id == id) {
-                    file = f
-                }
-            }
-        }
-        else if (version != null) {
-            val filteredFiles: MutableList<File> = mutableListOf()
-            for (f in files) {
-                if (f.displayName.contains(version)) {
-                    filteredFiles.add(f)
-                }
-            }
-            file = filteredFiles.first()
-            if (filteredFiles.size > 1) {
-                log.warn { "版本号为${version}的${slug}(${file!!.modId})不唯一，共有{}个" }
-                for ((index, f) in filteredFiles.withIndex()) {
-                    println("${index}: $f")
-                }
-                file = null
-            }
-        }
-        else {
-            file = files.first()
-            if (files.size > 1) {
-                log.warn { "支持MC ${modPack?.mcVersion}的${slug}(${file.modId})不版本唯一，共有${files.size}个" }
-                for ((index, f) in files.withIndex()) {
-                    println("${index}: $f")
-                }
-                log.info { "下载最新版：${file}" }
+                log.info { "不下载${file.fileName}的依赖项" }
             }
         }
 
-        if (file != null) {
-            client.downloadMod(file)
-        }
-        else {
-            log.warn { "未找到符合条件的MOD文件" }
-        }
+        return paths
     }
 
-    private fun download(args: ApplicationArguments) {
+    private fun download(args: ApplicationArguments) : List<Path> {
+        val paths = arrayListOf<Path>()
+
         loadModPack()
         if (modPack == null) {
             log.warn { "无法读取MC及Mod加载器版本信息" }
-            return
+            return paths
         }
 
         if (args.nonOptionArgs.size < 2) {
             log.warn { "请输入Mod关键字" }
-            return
+            return paths
         }
 
         val slug = args.nonOptionArgs[1]
@@ -393,7 +347,90 @@ Usage: mmm command [options...]
         if (args.containsOption("version")) {
             version = args.getOptionValues("version").first()
         }
+        var recursion = true
+        if (args.containsOption("recursion")) {
+            recursion = args.getOptionValues("recursion").first().toBoolean()
+        }
 
-        download(null, slug, version, true)
+        paths.addAll(download(null, slug, version, recursion))
+        return paths
     }
+    // endregion
+
+    // region install 安装
+    private fun install(args: ApplicationArguments) : Boolean {
+        loadModPack()
+        if (modPack == null) {
+            log.warn { "无法读取MC及Mod加载器版本信息" }
+            return false
+        }
+
+        if (args.nonOptionArgs.size < 2) {
+            log.warn { "请输入Mod关键字" }
+            return false
+        }
+
+        var prefix = ""
+        if (args.containsOption("prefix")) {
+            prefix = "[" + args.getOptionValues("prefix").first() + "]"
+        }
+
+        val slug = args.nonOptionArgs[1]
+        val downloaded = download(null, slug, null, true)
+
+        log.info { "开始安装${downloaded.size}个MOD" }
+        for ((index, existing) in downloaded.withIndex()) {
+            log.info { "第${index+1}个：${existing.fileName}" }
+            var linkPath: StringBuilder = StringBuilder()
+            linkPath.append("${modPack?.dir}/")
+            if (index == 0) {
+                linkPath.append(prefix)
+            }
+            else {
+                linkPath.append("[依赖]")
+            }
+            linkPath.append(existing.fileName)
+            val link = Paths.get(linkPath.toString())
+            var created: Path? = null
+
+            if (useHardLink) {
+                // 硬连接
+                try {
+                    log.info { "正在创建硬连接${existing} =H=> $link" }
+                    created = Files.createLink(link, existing)
+                } catch (ex: IOException) {
+                    log.warn("无法创建${existing}的硬连接，尝试创建软连接", ex)
+                }
+            }
+
+            if (useSymbolicLink) {
+                // 软连接
+                try {
+                    if (created == null) {
+                        log.info { "正在创建软连接${existing} =S=> $link" }
+                        created = Files.createSymbolicLink(link, existing)
+                    }
+                }
+                catch (ex: IOException) {
+                    log.warn ("无法创建${existing}的软连接，尝试复制文件", ex)
+                }
+            }
+
+            // 复制文件
+            try {
+                if (created == null) {
+                    log.info { "正在复制文件${existing} =C=> $link" }
+                    created = Files.copy(existing, link, StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+            catch (ex: IOException) {
+                log.warn ("无法复制文件${existing}到${link}，安装失败", ex)
+                return false
+            }
+        }
+
+        log.info { "${slug}安装完成" }
+        return true
+    }
+    // endregion
 }
