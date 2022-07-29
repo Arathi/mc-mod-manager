@@ -48,35 +48,6 @@ class CurseForgeApiClient constructor(
         return null
     }
 
-    @Deprecated("使用合并搜索searchMods")
-    fun searchModsSinglePage(
-            conditions: SearchModsCondition,
-            index: Int? = null,
-            pageSize: Int? = 50) : List<Mod> {
-        val uri = "/v1/mods/search"
-        val headers = LinkedHashMap<String, String>()
-        addApiKey(headers)
-
-        // 构建请求
-        val form = FormBody.Builder()
-        conditions.buildForm(form)
-        if (index != null) form.add("index", index.toString())
-        if (pageSize != null) form.add("pageSize", pageSize.toString())
-
-        // 生成参数
-        val query = buildQuery(form.build())
-
-        var req = buildGetRequest(uri, query, headers)
-
-        var mods = ArrayList<Mod>()
-        val respMsg = sendRequest(req, object: TypeReference<PaginationResponse<Mod>>() {})
-        if (respMsg != null) {
-            mods.addAll(respMsg.data)
-        }
-
-        return mods
-    }
-
     fun searchMods(
             conditions: SearchModsCondition,
             pageLimit: Int = 1,
@@ -117,17 +88,6 @@ class CurseForgeApiClient constructor(
         }
 
         return mods
-    }
-
-    @Deprecated("使用合并搜索getModFiles")
-    fun getModFilesSinglePage(
-            modId: Int,
-            gameVersion: String?,
-            modLoaderType: ModLoaderType?,
-            gameVersionTypeId: Int?,
-            index: Int? = 0,
-            pageSize: Int? = 50) {
-        throw NotImplementedError("未实现")
     }
 
     fun getModFiles(

@@ -68,9 +68,7 @@ class McModManagerRunner : ApplicationRunner {
             return
         }
 
-        val command = noArgs[0]
-
-        when(command) {
+        when(noArgs[0]) {
             "init" -> init(args)
             "search" -> search(args)
             "download" -> download(args)
@@ -158,10 +156,6 @@ Usage: mmm command [options...]
         }
 
         modPack = ModPack(name, version, mcVersion, forgeVersion, dir)
-        if (modPack == null) {
-            log.warn { "ModPack生成失败" }
-            return
-        }
 
         val path = Paths.get("${userDir}/modpack.json")
         val json = JSON.stringify(modPack!!, true)

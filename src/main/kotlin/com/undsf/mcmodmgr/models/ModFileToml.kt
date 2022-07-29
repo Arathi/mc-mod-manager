@@ -23,7 +23,7 @@ class ModFileToml(
 
     @JsonProperty
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var mods: MutableMap<String, Mod> = LinkedHashMap()
+    var mods: MutableMap<String, Mod> = mutableMapOf()
 
     init {
         name = jarName
@@ -38,7 +38,7 @@ class ModFileToml(
     }
 
     override fun toString(): String {
-        var builder = StringBuilder()
+        val builder = StringBuilder()
         builder.append(name)
         builder.append(" ")
         builder.append(modLoader)
@@ -48,7 +48,7 @@ class ModFileToml(
     }
 
     fun toTree(): String {
-        var builder = StringBuilder()
+        val builder = StringBuilder()
         builder.append(toString())
         builder.append(System.lineSeparator())
         val modIdList = mods.keys.toList()

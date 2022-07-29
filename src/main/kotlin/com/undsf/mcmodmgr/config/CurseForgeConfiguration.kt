@@ -15,9 +15,6 @@ class CurseForgeConfiguration {
     lateinit var httpClient: OkHttpClient
 
     @Autowired
-    lateinit var jsonTpl: JsonTemplate
-
-    @Autowired
     lateinit var options: CurseForgeOptions
 
     @Bean("curse-forge-api-client")

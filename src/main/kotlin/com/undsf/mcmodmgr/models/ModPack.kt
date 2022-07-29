@@ -6,31 +6,26 @@ import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
 
-class ModPack(name: String,
-              version: String,
-              mcVersion: String,
-              forgeVersion: String,
-              dir: String,
-              mods: MutableMap<String, Mod> = LinkedHashMap()) {
-    @JsonProperty
-    var name: String = name
+class ModPack(
+        @JsonProperty
+        var name: String,
 
-    @JsonProperty
-    var version: String = version
+        @JsonProperty
+        var version: String,
 
-    @JsonProperty
-    var mcVersion: String = mcVersion
+        @JsonProperty
+        var mcVersion: String,
 
-    @JsonProperty
-    var forgeVersion: String = forgeVersion
+        @JsonProperty
+        var forgeVersion: String,
 
-    @JsonProperty
-    var dir: String = dir
+        @JsonProperty
+        var dir: String,
 
-    @JsonProperty
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    var mods: MutableMap<String, Mod> = mods
-
+        @JsonProperty
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        var mods: MutableMap<String, Mod> = mutableMapOf()
+) {
     fun loadMods(mfts: List<ModFileToml>) {
         mods["minecraft"] = Mod("minecraft", mcVersion)
         mods["forge"] = Mod("forge", forgeVersion)

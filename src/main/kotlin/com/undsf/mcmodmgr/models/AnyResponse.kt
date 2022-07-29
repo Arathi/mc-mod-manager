@@ -2,7 +2,7 @@ package com.undsf.mcmodmgr.models
 
 class AnyResponse(code: Int, message: String?) : DataResponse<MutableMap<String, Any?>>(code, message) {
     init {
-        data = LinkedHashMap()
+        data = mutableMapOf()
     }
 
     fun addParam(key: String, value: Any?) {

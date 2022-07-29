@@ -1,20 +1,14 @@
 package com.undsf.mcmodmgr.models
 
-class ModDependency(
-        modId: String,
-        mandatory: Boolean,
-        versionRange: String,
-        ordering: String,
-        side: String
+data class ModDependency(
+        var modId: String,
+        var mandatory: Boolean,
+        var versionRange: String,
+        var ordering: String,
+        var side: String
 ) {
-    var modId: String = modId
-    var mandatory: Boolean = mandatory
-    var versionRange: String = versionRange
-    var ordering: String = ordering
-    var side: String = side
-
     override fun toString(): String {
-        var builder = StringBuilder()
+        val builder = StringBuilder()
         builder.append(modId)
         builder.append(" ")
         builder.append(versionRange)
