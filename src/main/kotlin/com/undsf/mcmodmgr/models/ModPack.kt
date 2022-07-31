@@ -1,6 +1,5 @@
 package com.undsf.mcmodmgr.models
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import mu.KotlinLogging
 
@@ -23,22 +22,24 @@ class ModPack(
         var dir: String,
 
         @JsonProperty
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        var mods: MutableMap<String, Mod> = mutableMapOf()
+        var mods: MutableMap<String, ModOptions?> = mutableMapOf()
 ) {
-    fun loadMods(mfts: List<ModFileToml>) {
-        mods["minecraft"] = Mod("minecraft", mcVersion)
-        mods["forge"] = Mod("forge", forgeVersion)
+    // fun loadMods(mfts: List<ModFileToml>) {
+    //     dependencies["minecraft"] = ModPackDependency("minecraft", "[$mcVersion,$mcVersion]")
+    //     dependencies["forge"] = ModPackDependency("forge", "[$forgeVersion,$forgeVersion]")
+    //     log.info { "获取到${mfts.size}个MOD文件" }
+    //     for (mft in mfts) {
+    //         log.info { "正在加载${mft.name}" }
+    //         for (mod in mft.mods.values) {
+    //             if (dependencies.containsKey(mod.modId)) {
+    //                 log.warn { "id为${mod.modId}的MOD已经存在" }
+    //             }
+    //             dependencies[mod.modId] = ModPackDependency(mod.modId, "[${mod.version},$mod.version]")
+    //         }
+    //     }
+    // }
 
-        log.info { "获取到${mfts.size}个MOD文件" }
-        for (mft in mfts) {
-            log.info { "正在加载${mft.name}" }
-            for (mod in mft.mods.values) {
-                if (mods.containsKey(mod.modId)) {
-                    log.warn { "id为${mod.modId}的MOD已经存在" }
-                }
-                mods[mod.modId] = mod
-            }
-        }
+    fun addDependency(key: String, opt: ModOptions) {
+        mods[key] = opt
     }
 }

@@ -48,7 +48,6 @@ class JsonConvertTests {
                 "41.0.93",
                 "D:\\Temp\\forge-mods"
         )
-        modPack.loadMods(listOf())
 
         json = JSON.stringify(modPack)
         log.info { "ModPack转换后的JSON为：${json}" }
@@ -61,25 +60,13 @@ class JsonConvertTests {
   "version": "0.3.0",
   "mcVersion": "1.19",
   "forgeVersion": "41.0.93",
-  "dir": "D:\\Temp\\forge-mods",
-  "mods": {
-    "minecraft": {
-      "version": "1.19",
-      "modId": "minecraft"
-    },
-    "forge": {
-      "version": "41.0.93",
-      "modId": "forge"
-    }
-  }
+  "dir": "D:\\Temp\\forge-mods"
 }
 """
-        // val obj: ModPack = mapper.readValue(json)
         val obj = JSON.parse(json, ModPack::class.java)
 
         assertNotNull(obj, "解析出的对象不应为空")
         assertEquals("s224", obj?.name, "转换出来的name与预期不符")
-        assertEquals(2, obj?.mods?.size, "获取到的mod数量与预期不符")
     }
 
     @Test
